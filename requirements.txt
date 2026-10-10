@@ -1,6 +1,7 @@
-# Pin your exact versions (run `pip freeze` once your env works).
-# These are sensible starting points — adjust as needed, then PIN them.
-numpy==1.26.4
-pandas==2.2.2
-matplotlib==3.8.4
-scikit-learn==1.4.2   # baselines / optional bonuses ONLY — not for your models
+# Pinned versions (tested with Python 3.14.3 on Windows 11).
+numpy==2.5.4
+pandas==3.0.6
+matplotlib==3.11.2
+scikit-learn==1.9.1   # baselines + test oracles ONLY — not used inside our models
+pytest==9.1.1
+kagglehub==1.0.2      # only for downloading the dataset (see data/README.md)

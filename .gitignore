@@ -25,3 +25,12 @@ results/
 .DS_Store
 .idea/
 .vscode/
+
+# --- LaTeX / beamer build artefacts, logs, test cache ---
+*.toc
+*.nav
+*.snm
+*.vrb
+*.synctex.gz
+run_log.txt
+.pytest_cache/
