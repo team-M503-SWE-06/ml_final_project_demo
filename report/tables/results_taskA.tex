@@ -1,0 +1,9 @@
+\begin{tabular}{@{}lrrrrrrrr@{}}
+\toprule
+Model & RMSE log & MAE log & R$^2$ log & RMSE AZN & MAE AZN & R$^2$ AZN & CV RMSE log & fit s \\
+\midrule
+Baseline: predict train mean & 0.636 $\pm$ 0.006 & 0.490 & -0.000 & 264.7k & 130.1k & -0.046 & n/a & 0.00 \\
+Ours: DecisionTree (MSE) & 0.231 $\pm$ 0.004 & 0.142 & 0.869 & 134.7k & 46.1k & 0.729 & 0.234 $\pm$ 0.003 & 17.31 \\
+sklearn DecisionTreeRegressor & 0.232 $\pm$ 0.004 & 0.143 & 0.867 & 135.0k & 46.3k & 0.728 & 0.233 $\pm$ 0.002 & 0.70 \\
+\bottomrule
+\end{tabular}
