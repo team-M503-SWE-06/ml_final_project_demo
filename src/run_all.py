@@ -932,7 +932,7 @@ def main() -> None:
 
     df = step_data()
     D = step_split(df)
-    step_eda(df, D["thr"])
+    step_eda(df.iloc[D["tr"]], D["thr"])
     cfg = {"tree": step_tune_tree(D), "svm": step_tune_svm(D)}
     step_margin_figure(D)
     RESULTS["final_configs"] = {"tree": cfg["tree"], "svm": cfg["svm"]}
