@@ -211,10 +211,12 @@ linear SVM $\lambda=\SvmLam$; RFF $\gamma=\RffGamma$, $\lambda=\RffLam$.
 The baselines use the \emph{same} hyperparameters: \texttt{DecisionTreeRegressor/Classifier}, and
 \texttt{Pipeline(StandardScaler, SGDClassifier(hinge, alpha=}$\lambda$\texttt{))} as the matched linear SVM.
 \texttt{SVC} (linear and RBF, $C=1/(\lambda n)$, same $\gamma$) is fit on a stratified 10k subsample because its
-training time grows super-linearly (Fig.~\ref{fig:scaling}). Uncertainty is reported in two ways: a bootstrap std
-on the test set (200 resamples), and 5-fold CV mean$\pm$std on train+val, with scaling refit inside each fold.
-The imputation medians and one-hot vocabularies are fit once on the training split and reused in the CV folds. This
-is a mild optimism for the folds drawn from the validation rows, and it does not affect the test numbers.
+training time grows super-linearly (Fig.~\ref{fig:scaling}). The test-set metrics include bootstrap std
+(200 resamples). The additional 5-fold results on train+val are descriptive post-selection variability only,
+not leakage-free performance estimates: configurations were selected using the validation labels, while
+imputation medians and one-hot vocabularies were fit once on the original training split before folds were made.
+Scaling is refit per fold. These fold results should not be interpreted as unbiased generalization estimates;
+this does not affect the independent test-set metrics.
 
 \section{Results}
 \subsection{Tuning and the bias--variance story}
@@ -299,7 +301,7 @@ cost grows super-linearly, which is why the RFF route is the practical way to ge
 
 \begin{table*}[t]
   \centering
-  \caption{Task A (log price) on the test set. RMSE $\pm$ bootstrap std; CV = 5-fold mean $\pm$ std on train+val.}
+  \caption{Task A (log price) on the test set. RMSE $\pm$ bootstrap std; *descriptive post-selection fold RMSE mean $\pm$ std, not a leakage-free performance estimate.}
   \label{tab:resA}
   \small
   \input{tables/results_taskA.tex}
@@ -307,7 +309,7 @@ cost grows super-linearly, which is why the RFF route is the practical way to ge
 
 \begin{table*}[t]
   \centering
-  \caption{Task B (price tier) on the test set. F1 $\pm$ bootstrap std; CV F1 = 5-fold mean $\pm$ std on train+val.
+  \caption{Task B (price tier) on the test set. F1 $\pm$ bootstrap std; *descriptive post-selection fold F1 mean $\pm$ std, not a leakage-free performance estimate.
   SVC is fit on a stratified 10k subsample of the training split.}
   \label{tab:resB}
   \small
@@ -316,7 +318,7 @@ cost grows super-linearly, which is why the RFF route is the practical way to ge
 
 \begin{table}[t]
   \centering
-  \caption{All models on both tasks (test set; CV on train+val).}
+  \caption{All models on both tasks (test set; *descriptive post-selection fold variability on train+val, not a leakage-free performance estimate).}
   \label{tab:all}
   \scriptsize
   \setlength{\tabcolsep}{2pt}

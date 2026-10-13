@@ -10,7 +10,7 @@ Steps
   3. tune OUR decision tree (Task A regression, Task B classification) on VAL
   4. tune OUR Pegasos SVM (linear + random-Fourier-feature) on VAL
   5. final test evaluation vs scikit-learn baselines with matched settings,
-     5-fold CV mean±std on the development set, bootstrap std on test,
+     descriptive 5-fold variability on the development set, bootstrap std on test,
      fit/predict times + a scaling experiment
   6. error analysis (importances, SVM weights, residuals by price/district)
   7. writes results/*.json|txt, report/tables/*.tex and report/figures/*.png
@@ -541,7 +541,9 @@ def step_final(D, cfg):
     ev.compare({k: {kk: vv for kk, vv in v.items() if not kk.startswith("_")} for k, v in final["B"].items()},
                keys=["Accuracy", "Precision", "Recall", "F1", "ROC_AUC", "PR_AUC", "fit_s", "predict_s"])
 
-    section("5c. 5-fold CV on the development set (train+val), mean ± std")
+    section("5c. Descriptive post-selection 5-fold variability (train+val), mean ± std")
+    say("  Not a leakage-free performance estimate: configs were selected on val and")
+    say("  feature statistics were fitted once on train before creating these folds.")
     cv = {"A": {}, "B": {}}
     for name, fac in reg.items():
         def fp(Xa, ya, Xb, yb, fac=fac):
@@ -565,7 +567,7 @@ def step_final(D, cfg):
                       f"{r['R2_log']:.3f}", f"{r['RMSE_AZN'] / 1e3:,.1f}k", f"{r['MAE_AZN'] / 1e3:,.1f}k",
                       f"{r['R2_AZN']:.3f}", ms(c["RMSE_log"]) if c else "n/a", f"{r['fit_s']:.2f}"])
     write_tex_table("results_taskA", ["Model", "RMSE log", "MAE log", "R² log", "RMSE AZN", "MAE AZN",
-                                      "R² AZN", "CV RMSE log", "fit s"], rowsA)
+                                      "R² AZN", "Fold RMSE log*", "fit s"], rowsA)
     rowsB = []
     for name, r in final["B"].items():
         c = cv["B"][name]
@@ -573,7 +575,7 @@ def step_final(D, cfg):
                       f"{r['F1']:.3f} ± {r['F1_boot_std']:.3f}", f"{r['ROC_AUC']:.3f}", f"{r['PR_AUC']:.3f}",
                       ms(c["F1"]), f"{r['fit_s']:.2f}", f"{r['predict_s']:.3f}"])
     write_tex_table("results_taskB", ["Model", "Prec.", "Rec.", "F1 (test)", "ROC-AUC", "PR-AUC",
-                                      "CV F1", "fit s", "pred. s"], rowsB)
+                                      "Fold F1*", "fit s", "pred. s"], rowsB)
     # compact combined table: all models on both tasks
     rowsAll = []
     for name, r in final["A"].items():
@@ -582,13 +584,13 @@ def step_final(D, cfg):
                         ms(c["RMSE_log"]) if c else "n/a", "—", "—", "—"])
     for name, r in final["B"].items():
         rowsAll.append([name, "—", "—", "—", f"{r['F1']:.3f}", f"{r['ROC_AUC']:.3f}", ms(cv["B"][name]["F1"])])
-    write_tex_table("results_all", ["Model", "A: RMSE log", "A: R² log", "A: CV RMSE",
-                                    "B: F1", "B: AUC", "B: CV F1"], rowsAll)
+    write_tex_table("results_all", ["Model", "A: RMSE log", "A: R² log", "A: Fold RMSE*",
+                                    "B: F1", "B: AUC", "B: Fold F1*"], rowsAll)
 
     RESULTS["final"] = {t: {k: {kk: (vv.tolist() if isinstance(vv, np.ndarray) else vv)
                                 for kk, vv in v.items() if kk not in ("_pred", "_score")}
                             for k, v in final[t].items()} for t in final}
-    RESULTS["cv"] = cv
+    RESULTS["post_selection_fold_variability"] = cv
     return final, models
 
 

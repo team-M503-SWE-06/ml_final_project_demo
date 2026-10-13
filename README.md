@@ -33,7 +33,10 @@ python -m src.run_all         # ~15-20 min on a laptop: all numbers, tables, fig
 ```
 
 `run_all` prints the cleaning log, the tuning sweeps, the final configs, the test-set results
-table, CV mean ± std, timings and the error analysis. It writes:
+table, descriptive post-selection fold variability, timings and the error analysis. The
+fold results are not leakage-free performance estimates: the configurations were selected
+using the validation labels, and feature statistics were fitted once on the original training
+split before folds were created. It writes:
 
 - `report/figures/*.png`: every figure in the report and slides
 - `report/tables/*.tex`: the results tables and `numbers.tex`, which holds every number quoted in the report text
