@@ -1,63 +1,66 @@
-# MLE-AI-201 Machine Learning — Final Project (Starter Pack)
+# bina.az price modelling with a from-scratch decision tree and SVM
 
-Build **two models from scratch** (a decision tree and an SVM) on the
-**bina.az** real-estate dataset, then benchmark honestly against
-scikit-learn. Read the full brief in the project statement PDF handed out
-with this pack.
+MLE-AI-201 Machine Learning: final project. We clean the **bina.az** Baku real-estate
+dump and frame it as two tasks:
 
-- **Released:** Sun 04 Oct 2026
-- **Due:** **Sun 18 Oct 2026, 23:59 (Baku)** — two weeks, no late submissions.
-- **Demo:** defended in the session after the deadline.
+- **Task A, regression:** predict `log(price)` (metrics: RMSE, MAE and R² on log price and on AZN).
+- **Task B, classification:** predict the price tier (premium = price above the **training-set median**).
+  Metrics: precision, recall, F1, ROC-AUC, PR-AUC and the confusion matrix.
 
-## What you submit (on Moodle)
-Exactly **three** things; **one member submits** for the whole team:
-1. **GitHub link** to your repo (tagged `v1.0-final`).
-2. **Report PDF** (IEEE two-column — use `report/report.tex`).
-3. **Slides PDF**.
+Both models are **our own NumPy code**:
 
-Keep `contribution_report.md` in the repo root (checked at the demo).
+| File | What is in it |
+|---|---|
+| `src/decision_tree.py` | CART tree: Gini / entropy / MSE, vectorised threshold search, `max_depth`, `min_samples_split`, `min_samples_leaf`, `min_impurity_decrease`, `predict_proba`, impurity-decrease feature importances |
+| `src/svm.py` | Pegasos soft-margin SVM (mini-batch sub-gradient on the hinge primal, 1/(λt) / invscaling / constant schedules, projection, iterate averaging, margin and support vectors) plus **random Fourier features** for the RBF kernel |
+| `src/data_prep.py` | loading, cleaning (logged), leakage removal, train-only feature statistics, stratified split, tier label |
+| `src/evaluate.py` | NumPy metrics (RMSE/MAE/R², confusion matrix, P/R/F1, ROC-AUC, PR-AUC), k-fold CV, bootstrap |
+| `src/run_all.py` | **one command** that reproduces every number, table and figure |
+| `tests/` | pytest suite: the tree reproduces sklearn's splits on a toy example, every hyperparameter changes the tree, the SVM matches `SVC` on a toy split, the metrics match sklearn |
 
-## The two tasks
-- **Task A — Regression:** predict `price` (consider `log(price)`).
-- **Task B — Classification:** predict a derived **price tier**
-  (premium vs standard, median split on the training set).
+scikit-learn is used **only** for the baselines (`DecisionTree*`, `SVC`, `SGDClassifier` in a scaling
+`Pipeline`) and as a test oracle.
 
-## Golden rule
-Your **decision tree** and your **SVM** must be **your own NumPy code**.
-scikit-learn is for the comparison baselines (and the optional bonuses)
-only. For the SVM you do **not** need a QP/SMO solver — use the
-**Pegasos** sub-gradient method (see the statement and `src/svm.py`).
+## Reproduce everything
+
+```bash
+python -m venv .venv
+# Windows: .venv\Scripts\activate     macOS/Linux: source .venv/bin/activate
+pip install -r requirements.txt
+python -m src.get_data        # downloads data/house_sale.csv (see data/README.md)
+python -m pytest -q           # 32 tests
+python -m src.run_all         # ~15-20 min on a laptop: all numbers, tables, figures
+```
+
+`run_all` prints the cleaning log, the tuning sweeps, the final configs, the test-set results
+table, descriptive post-selection fold variability, timings and the error analysis. The
+fold results are not leakage-free performance estimates: the configurations were selected
+using the validation labels, and feature statistics were fitted once on the original training
+split before folds were created. It writes:
+
+- `report/figures/*.png`: every figure in the report and slides
+- `report/tables/*.tex`: the results tables and `numbers.tex`, which holds every number quoted in the report text
+- `results/metrics.json`: everything in machine-readable form
+
+To build the PDFs (MiKTeX/TeX Live `pdflatex`), run this after `run_all`:
+
+```bash
+cd report && pdflatex report.tex && pdflatex report.tex
+cd ../presentation && pdflatex slides.tex && pdflatex slides.tex
+```
+
+## Protocol (no leakage)
+- `unit_price` and `total_price` are dropped because both are functions of `price`. Identifiers, free text and `views` are dropped too.
+- The split is 70 / 15 / 15, stratified on price deciles and seeded (`SEED = 42`).
+- The tier threshold, imputation medians, one-hot vocabularies and standardisation statistics all come from the **training split only**.
+- Hyperparameters are chosen on the **validation** split. The test split is used once, in step 5 of `run_all`.
 
 ## Repo layout
 ```
-.
-├── README.md               # this file
-├── requirements.txt        # pin your versions
-├── .gitignore
-├── contribution_report.md  # who did what (keep in repo root)
-├── data/                   # dataset lives here (not committed — see data/README.md)
-├── src/                    # YOUR from-scratch code
-│   ├── data_prep.py        #   loading, cleaning, split, tier label
-│   ├── decision_tree.py    #   DecisionTree (Gini/entropy/MSE)
-│   ├── svm.py              #   PegasosSVM (hinge-loss sub-gradient)
-│   ├── evaluate.py         #   metrics + comparison helpers
-│   └── run_all.py          #   ONE command reproduces every number/figure
-├── report/                 # IEEE report (self-contained, no IEEEtran.cls)
-│   ├── report.tex
-│   └── figures/
-└── presentation/           # your slides PDF
-```
-
-## Reproducibility (graded)
-- Pin dependencies in `requirements.txt`; fix all random seeds.
-- `python -m src.run_all` must reproduce **every** headline number and
-  figure from a clean checkout.
-- Do **not** commit the raw data archive (see `.gitignore`).
-
-## Quick start
-```bash
-python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-# put the dataset in data/ (see data/README.md), then:
-python -m src.run_all
+├── README.md  requirements.txt  contribution_report.md
+├── data/            dataset goes here (not committed)
+├── src/             from-scratch models + pipeline
+├── tests/           pytest suite
+├── report/          report.tex (+ generated figures/ and tables/)
+└── presentation/    slides.tex -> slides.pdf
 ```

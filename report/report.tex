@@ -1,25 +1,15 @@
 % =====================================================================
-%  IEEE-STYLE CONFERENCE REPORT TEMPLATE  (self-contained)
-%  MLE-AI-201 Machine Learning -- Final Project
-%
-%  This template MIMICS the IEEE two-column conference look using only
-%  standard LaTeX packages. It does NOT depend on IEEEtran.cls, so it
-%  compiles anywhere (tectonic, pdflatex, Overleaf) with nothing extra.
-%
-%  Build:   tectonic report.tex      (recommended)
-%     or:   pdflatex report.tex ; pdflatex report.tex
+%  MLE-AI-201 Machine Learning -- Final Project report (IEEE-style)
+%  Every number in the text comes from tables/numbers.tex and the other
+%  tables/*.tex files, which `python -m src.run_all` regenerates.
+%  Build:   pdflatex report.tex ; pdflatex report.tex
 % =====================================================================
 \documentclass[10pt,twocolumn,a4paper]{article}
 
-% ---- Geometry: IEEE-like margins / two narrow columns ----------------
 \usepackage[a4paper,top=0.75in,bottom=1.0in,left=0.68in,right=0.68in,columnsep=0.25in]{geometry}
-
-% ---- Times-like font (standard, ships with every TeX distro) ---------
-\usepackage{mathptmx}          % Times text + math
+\usepackage{mathptmx}
 \usepackage[T1]{fontenc}
-\usepackage[utf8]{inputenc}    % allows accented / Azerbaijani chars
-
-% ---- Common, dependency-free packages --------------------------------
+\usepackage[utf8]{inputenc}
 \usepackage{graphicx}
 \usepackage{amsmath,amssymb}
 \usepackage{booktabs}
@@ -30,51 +20,56 @@
 \usepackage[hidelinks]{hyperref}
 \usepackage{url}
 
-% ---- IEEE-style section headings -------------------------------------
 \renewcommand{\thesection}{\Roman{section}}
 \renewcommand{\thesubsection}{\Alph{subsection}}
 \titleformat{\section}[block]{\centering\normalsize\scshape}{\thesection.}{0.5em}{}
 \titleformat{\subsection}[block]{\normalsize\itshape}{\thesubsection.}{0.5em}{}
 \titlespacing*{\section}{0pt}{1.4ex plus 1ex minus .2ex}{1ex}
 \titlespacing*{\subsection}{0pt}{1.0ex plus 1ex minus .2ex}{0.6ex}
-
-% ---- Abstract / Index-Terms in the IEEE boldface-dash style ----------
 \newcommand{\abstractkw}[1]{\noindent\textbf{\textit{#1}}}
-
 \captionsetup{font=small,labelsep=period}
 \setlength{\parindent}{1em}
+\graphicspath{{figures/}}
+\newcommand{\schwa}{\raisebox{\depth}{\rotatebox{180}{e}}}   % Azerbaijani letter schwa
 
-% =====================================================================
+\input{tables/numbers.tex}
+
 \begin{document}
 
-% ------------------------- TITLE BLOCK --------------------------------
 \twocolumn[
   \begin{@twocolumnfalse}
   \begin{center}
-    {\LARGE\bfseries Your Project Title Here:\\A Clear, Specific Subtitle\par}
+    {\LARGE\bfseries Pricing Baku Homes From Scratch:\\A NumPy Decision Tree and Pegasos SVM on bina.az Listings\par}
     \vspace{1.2em}
-    % Authors: Surname, Given name --- alphabetical by surname.
+    % TODO(team): authors, Surname, Given name, alphabetical by surname.
     {\large
-      Aliyeva, Aysel\quad Mammadov, Murad\quad Rustamli, Rustam\par}
+      Surname1, Name1\quad Surname2, Name2\quad Surname3, Name3\par}
     \vspace{0.5em}
     {\itshape MLE-AI-201 Machine Learning, AI Academy --- Cohort II\par}
     \vspace{1.4em}
   \end{center}
   \begin{quote}
     \small
-    \abstractkw{Abstract---}% IEEE uses an em-dash after "Abstract"
-    One paragraph, roughly 150--250 words. State the problem (price
-    prediction and the derived price-tier task on the bina.az dataset),
-    what you built from scratch (a decision tree and an SVM), the key
-    result (headline metrics vs.\ scikit-learn), and the main takeaway.
-    Write it last. \textbf{End the abstract with your repository link},
-    per IEEE convention:
-    \href{https://github.com/your-team/your-repo}{\texttt{github.com/your-team/your-repo}}
+    \abstractkw{Abstract---}%
+    We clean a scraped dump of \NRaw{} bina.az sale records into \NClean{} unique Baku
+    residential listings. We then frame two tasks: regression of $\log(\text{price})$, and a
+    premium/standard price-tier label split at the training-set median (\TierThr{}~AZN).
+    Both models are implemented in NumPy. The first is a CART decision tree with Gini, entropy and MSE
+    criteria, a vectorised threshold search and four stopping rules. The second is a soft-margin SVM trained
+    by Pegasos sub-gradient descent on the hinge-loss primal, extended to an RBF kernel with
+    random Fourier features. Hyperparameters are chosen on a validation split only. On the held-out test set
+    our tree reaches RMSE \OursARmse{} on log price ($R^2=\OursARsq$, mean absolute
+    percentage error \OursAMape\% in AZN). scikit-learn's tree with the same settings scores \SkARmse. On the tier task our tree reaches
+    F1 \OursBTreeFone{} (sklearn \SkBTreeFone), our linear SVM \OursSvmFone{} (SGDClassifier
+    \SgdFone) and our RFF-SVM \OursRffFone{} (kernel SVC \SvcRbfFone). The from-scratch models
+    match the library baselines within noise. Most remaining errors are luxury properties,
+    house-heavy suburban districts and listings priced close to the tier threshold.
+    Code: \href{https://github.com/TODO-team/TODO-repo}{\texttt{github.com/TODO-team/TODO-repo}}
     (tag \texttt{v1.0-final}).
 
     \vspace{0.6em}
     \abstractkw{Index Terms---}decision tree, support-vector machine,
-    Pegasos, regression, classification, real-estate price prediction.
+    Pegasos, random Fourier features, real-estate price prediction.
   \end{quote}
   \vspace{1.0em}
   \end{@twocolumnfalse}
@@ -82,102 +77,374 @@
 
 % =====================================================================
 \section{Introduction}
-Motivate the problem and state your contributions as a short bulleted or
-inline list. What is the task, why does it matter, and what did your
-team do? Keep background brief; cite sources like this~\cite{pegasos}.
+Online listing prices are noisy, heavy-tailed and dominated by location. Predicting them is a
+realistic test of whether a model has learned the market or just memorised the data. Our contributions:
+(i) a documented, leakage-free cleaning pipeline for the raw bina.az dump;
+(ii) a from-scratch CART tree whose splits match scikit-learn's exactly on a fully determined test example;
+(iii) a from-scratch Pegasos SVM~\cite{pegasos} with visible margins and support vectors, plus a
+random-Fourier-feature (RFF) kernel extension~\cite{rff};
+(iv) a matched benchmark against scikit-learn~\cite{sklearn} with cross-validated uncertainty,
+timing and an error analysis.
+\texttt{python -m src.run\_all} regenerates every number, table and figure in this report.
 
-\section{Related Work / Background}
-Briefly place your work in context: decision trees (impurity, information
-gain), the soft-margin SVM and the hinge-loss primal, and the Pegasos
-sub-gradient solver you used~\cite{pegasos}. One or two short paragraphs.
+\section{Background}
+A classification tree chooses, at each node, the split $x_j\le t$ that maximises the information gain
+$\mathrm{IG}=I(\text{parent})-\sum_c \tfrac{N_c}{N} I(c)$, where $I$ is the Gini impurity $1-\sum_k p_k^2$
+or the entropy $-\sum_k p_k\log_2 p_k$. A regression tree uses the variance
+$I_{\text{reg}}=\tfrac1N\sum_i(y_i-\bar y)^2$ instead~\cite{cart}. The soft-margin linear SVM minimises
+the regularised hinge loss
+\begin{equation}
+  J(\mathbf{w},b)=\tfrac{\lambda}{2}\lVert\mathbf{w}\rVert^{2}
+  +\tfrac{1}{n}\sum_{i=1}^{n}\max\!\big(0,\,1-y_i(\mathbf{w}^{\top}\mathbf{x}_i+b)\big),
+\end{equation}
+which Pegasos solves by stochastic sub-gradient steps with rate $\eta_t=1/(\lambda t)$, with no QP or SMO
+solver~\cite{pegasos}. This objective equals the textbook $C$-SVM with $C=1/(\lambda n)$.
 
 \section{Data and Preprocessing}
-Describe the bina.az dataset: size, key columns, and the cleaning you
-did (currency, types, missing values, duplicates, outliers). State the
-two tasks (price regression; price-tier classification), how you derived
-the tier label, and your train/validation/test split. \textbf{Name the
-leakage columns you removed and why.}
+\subsection{Dataset and cleaning}
+The Kaggle dump (\texttt{house\_sale.csv}, version~1, scraped Oct--Nov 2024) has \NRaw{} rows and 51 columns.
+Most columns are strings with Azerbaijani names and units. The cleaning steps, in order, are logged by \texttt{data\_prep.clean}:
+\begin{itemize}\setlength\itemsep{0pt}
+\item \emph{Currency:} every price is AZN (checked), so no conversion is needed.
+\item \emph{Scope:} we keep residential categories (new build, old build, house/villa) in Baku.
+  Land, offices, garages and commercial objects are dropped because they form different markets,
+  and land is priced per \emph{sot}.
+\item \emph{Duplicates:} the same listing is re-scraped on many days. We keep the newest scrape per URL,
+  which removes 33,054 rows, and then drop 709 re-posts with identical price, area, rooms, floor,
+  coordinates and category.
+\item \emph{Type coercion:} \texttt{Sah\schwa{}} (``145 m\textsuperscript{2}'')$\to$ area;
+  \texttt{Torpaq sah\schwa{}si} (``1.3 sot'')$\to$ land; \texttt{M\schwa{}rt\schwa{}b\schwa{}} (``7 / 9'')$\to$ floor and total floors;
+  yes/no columns$\to$0/1. The district (\emph{rayon}) and metro proximity are parsed from \texttt{extra\_info}.
+\item \emph{Outliers:} we use fixed domain rules, not data quantiles, so no statistic is learned from test rows.
+  The rules drop rows with price outside $[10^4, 5{\cdot}10^6]$~AZN, area outside $[15,1500]$~m\textsuperscript{2},
+  price per m\textsuperscript{2} outside $[150,15000]$ (typos or rent ads), land above 200~sot,
+  more than 15 rooms, impossible floors, or coordinates outside Baku. Together they remove 133 rows.
+\item \emph{Missing values:} median imputation using \emph{training} medians, with a missing-indicator
+  column for rooms, floor and repair. Missing land area means a flat, so it is set to 0.
+\end{itemize}
+
+\subsection{Leakage}
+\texttt{unit\_price} (AZN per m\textsuperscript{2}) is price divided by area, and \texttt{total\_price}
+equals \texttt{price} in 99.99\% of rows. Both are arithmetic functions of the target and are dropped. Including either one would
+let the tree reconstruct the price exactly. We also drop identifiers and personal fields
+(\texttt{owner\_name}, \texttt{shop\_name}, \texttt{address}, ids and URLs), the free-text \texttt{description},
+which often restates the price, scrape timestamps, and \texttt{views}, which accumulates \emph{after} listing.
+\texttt{run\_all} asserts that no leakage column survives into the feature names.
+
+\subsection{Features, tasks and split}
+The \NFeat{} features are: numeric attributes (area, rooms, floor, total floors, land, lat/lng); engineered
+features (floor ratio, top and ground floor flags, area per room, haversine distance to the city centre); binary amenities
+(repair, bill of sale, mortgage, agent, residential complex, VIP/featured); and one-hot category,
+district and neighbourhood columns. Neighbourhoods with fewer than 100 training listings are pooled into ``other''.
+We chose one-hot over ordinal codes because a linear SVM would otherwise read a fake ordering into nominal values.
+The split is 70/15/15 and stratified on price deciles, which balances the tier label across splits (Table~\ref{tab:data}).
+The tier threshold is the median of the \emph{training} prices only. Task~A is evaluated with RMSE, MAE and
+$R^2$ on log price and on AZN. Task~B is evaluated with precision, recall, F1, ROC-AUC, PR-AUC and the confusion matrix.
 
 \begin{table}[t]
   \centering
   \caption{Dataset summary after cleaning.}
   \label{tab:data}
-  \begin{tabular}{@{}lr@{}}
-    \toprule
-    Property & Value \\
-    \midrule
-    Rows (after cleaning)       & --- \\
-    Features used               & --- \\
-    Train / Val / Test split    & --- / --- / --- \\
-    Price-tier balance (\%)     & --- \\
-    \bottomrule
-  \end{tabular}
-\end{table}
-
-\section{Method}
-\subsection{Decision tree (from scratch)}
-Describe your impurity criteria (Gini / entropy / MSE reduction), the
-split search, recursion, leaf rule, and hyperparameters.
-
-\subsection{Support-vector machine (from scratch)}
-State the objective and the Pegasos update you implemented:
-\begin{equation}
-  J(\mathbf{w},b)=\tfrac{\lambda}{2}\lVert\mathbf{w}\rVert^{2}
-  +\tfrac{1}{n}\sum_{i=1}^{n}\max\!\big(0,\,1-y_i(\mathbf{w}^{\top}\mathbf{x}_i+b)\big).
-\end{equation}
-Explain the learning-rate schedule, feature scaling, and your non-linear
-extension (kernelised Pegasos or random Fourier features), if any.
-
-\section{Experimental Setup}
-Metrics (RMSE/MAE/$R^2$ for regression; precision/recall/F1/AUC for
-classification), hyperparameter search protocol, seeds, and the
-scikit-learn baselines you compared against (with matched settings).
-
-\section{Results}
-Lead with a results table; back every claim with a number or figure.
-
-\begin{table}[t]
-  \centering
-  \caption{Headline results (test set, mean $\pm$ std over folds).}
-  \label{tab:results}
-  \begin{tabular}{@{}lcc@{}}
-    \toprule
-    Model & Task A (RMSE) & Task B (F1) \\
-    \midrule
-    Ours: decision tree     & --- & --- \\
-    Ours: SVM (Pegasos)     & n/a & --- \\
-    scikit-learn baseline   & --- & --- \\
-    \bottomrule
-  \end{tabular}
+  \small
+  \input{tables/dataset.tex}
 \end{table}
 
 \begin{figure}[t]
   \centering
-  % \includegraphics[width=\linewidth]{figures/your_plot.pdf}
-  \fbox{\parbox[c][3.2cm][c]{0.9\linewidth}{\centering\small
-    Replace with a figure (e.g.\ validation curve, confusion matrix,
-    or feature importances). Save plots to \texttt{figures/}.}}
-  \caption{One clear figure beats ten decorative ones.}
-  \label{fig:main}
+  \includegraphics[width=\linewidth]{eda_price_distribution.png}\\[2pt]
+  \includegraphics[width=\linewidth]{eda_location.png}
+  \caption{Price is heavy-tailed; $\log(\text{price})$ is close to symmetric (top). Location matters (bottom):
+  the seaside villa district Khazar and the central Sabail, Nasimi and Narimanov have the highest median
+  prices, while the outer Absheron, Qaradagh and Surakhani have the lowest.}
+  \label{fig:eda}
 \end{figure}
 
+\section{Method}
+\subsection{Decision tree (from scratch)}
+\texttt{DecisionTree(task, criterion, max\_depth, min\_samples\_split, min\_samples\_leaf,
+min\_impurity\_decrease)} mirrors sklearn's \texttt{fit/predict/predict\_proba}. For every node and feature
+we sort the samples once. Prefix sums of class counts (classification) or of $y$ and $y^2$ (regression)
+then give the impurity of \emph{every} candidate split in one vectorised pass. Candidates lie only between two
+distinct values, the threshold is their midpoint, and children smaller than \texttt{min\_samples\_leaf}
+are excluded. The growth is recursive and stops at \texttt{max\_depth}, below \texttt{min\_samples\_split},
+at a pure node, or when the weighted decrease $\tfrac{N_t}{N}\mathrm{IG}$ falls below
+\texttt{min\_impurity\_decrease} (sklearn's definition). A leaf predicts the majority class (with
+\texttt{predict\_proba} from leaf class frequencies) or the mean. Feature importances are the normalised
+sums of $N_t\cdot\mathrm{IG}$. Two numerical details turned out to matter. First, ties go to the lowest feature index, whereas
+sklearn permutes features at random. Second, when two neighbouring values are adjacent doubles, their
+midpoint rounds onto the upper value, so we fall back to the lower one. Our real data triggered this bug and it is
+now covered by a test.
+
+\subsection{Support-vector machine (from scratch)}
+\texttt{PegasosSVM} runs mini-batch Pegasos (batch 32; batch 1 and full batch are also supported). Each
+step applies $\mathbf{w}\leftarrow(1-\eta_t\lambda)\mathbf{w}+\tfrac{\eta_t}{|B|}\sum_{i\in A}y_i\mathbf{x}_i$
+over the margin violators $A=\{i:y_i\mathbf{w}^{\top}\mathbf{x}_i<1\}$. The bias is folded in as a constant
+feature, as the brief suggests. Optional steps are the projection onto $\lVert\mathbf{w}\rVert\le1/\sqrt\lambda$
+and averaging of the second-half iterates. The averaging is the variant covered by the Pegasos guarantee, and in practice it removes the
+noise of the $1/(\lambda t)$ schedule. The model exposes $\lambda$, the epochs, the batch size and the learning-rate schedule
+($1/(\lambda t)$, $\eta_0/\sqrt t$ or constant). It records $J$ after every epoch and reports $\lVert\mathbf{w}\rVert$, the margin $2/\lVert\mathbf{w}\rVert$
+and the support vectors ($y_i f(\mathbf{x}_i)\le1$). Features are standardised with training statistics.
+
+\emph{Non-linearity: option (ii), random Fourier features.} We map
+$\phi(\mathbf{x})=\sqrt{2/D}\cos(W\mathbf{x}+\mathbf{c})$ with $W_{ij}\sim\mathcal N(0,2\gamma)$ and
+$c_j\sim U[0,2\pi)$, so that $\phi(\mathbf{x})^\top\phi(\mathbf{z})\approx e^{-\gamma\lVert\mathbf{x}-\mathbf{z}\rVert^2}$~\cite{rff},
+and run the same linear Pegasos on $\phi(X)$ with $D=1000$. We chose RFF over kernelised Pegasos because, with
+$\sim$40k training rows, kernel Pegasos needs $O(n^2)$ kernel evaluations, while RFF costs $O(nD)$ and reuses
+the tested linear solver unchanged.
+
+\subsection{Tests}
+The pytest suite (32 tests) covers the following. Our tree reproduces sklearn's exact split list
+(feature, threshold, depth) and \texttt{predict\_proba} on a 12-point example for Gini, entropy and MSE.
+Each of the four hyperparameters changes the tree, and feature importances match sklearn's. Pegasos decreases $J$,
+agrees with \texttt{SVC} ($C=1/(\lambda n)$) on more than 97\% of a toy split with weight cosine above 0.99, and RFF approximates the
+RBF kernel and solves XOR. All metrics equal sklearn's.
+
+\section{Experimental Setup}
+All tuning uses the validation split, and the test split is touched once at the end. For the tree we swept
+\texttt{max\_depth}$\times$\texttt{min\_samples\_leaf} for Task~A and criterion$\times$\texttt{max\_depth}, then
+\texttt{min\_samples\_leaf}, for Task~B. For the SVM we swept $\lambda\in[10^{-6},10^{-1}]$, compared schedules and epochs,
+and ran a $\gamma\times\lambda$ grid for RFF. For the SVM we pick the \emph{most regularised} setting whose
+validation F1 is within 0.002 of the best. Smaller differences are below the noise level, and very small $\lambda$
+had not converged in 30 epochs (Table~\ref{tab:svm}). The final configurations are:
+tree A depth~\TreeADepth, leaf~$\ge$\TreeALeaf; tree B \TreeBCrit, depth~\TreeBDepth, leaf~$\ge$\TreeBLeaf;
+linear SVM $\lambda=\SvmLam$; RFF $\gamma=\RffGamma$, $\lambda=\RffLam$.
+The baselines use the \emph{same} hyperparameters: \texttt{DecisionTreeRegressor/Classifier}, and
+\texttt{Pipeline(StandardScaler, SGDClassifier(hinge, alpha=}$\lambda$\texttt{))} as the matched linear SVM.
+\texttt{SVC} (linear and RBF, $C=1/(\lambda n)$, same $\gamma$) is fit on a stratified 10k subsample because its
+training time grows super-linearly (Fig.~\ref{fig:scaling}). The test-set metrics include bootstrap std
+(200 resamples). The additional 5-fold results on train+val are descriptive post-selection variability only,
+not leakage-free performance estimates: configurations were selected using the validation labels, while
+imputation medians and one-hot vocabularies were fit once on the original training split before folds were made.
+Scaling is refit per fold. These fold results should not be interpreted as unbiased generalization estimates;
+this does not affect the independent test-set metrics.
+
+\section{Results}
+\subsection{Tuning and the bias--variance story}
+Fig.~\ref{fig:tree} shows the classic picture. Training error keeps falling with depth, but with
+leaves of size 1 the validation RMSE bottoms out at depth 12 and then rises as the tree memorises
+individual listings. A minimum leaf size of 5--20 removes most of that variance. Gini and entropy are within
+noise of each other (best val F1 \GiniBest{} vs \EntropyBest). The learning curves (Fig.~\ref{fig:lc})
+show both failure modes. The tuned deep tree has near-zero training error and a large gap that shrinks as data
+is added, which is high variance, so more data still helps. The depth-6 tree and the linear SVM have training error
+close to validation error, which is high bias: more data does not help them, and only more capacity would.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{tree_taskA_validation_curves.png}\\[2pt]
+  \includegraphics[width=\linewidth]{tree_taskB_validation_curves.png}
+  \caption{Our tree's validation curves. Top: Task A train vs validation RMSE (left) and the effect
+  of \texttt{min\_samples\_leaf} (right). Bottom: Gini vs entropy over depth, and the leaf-size sweep.}
+  \label{fig:tree}
+\end{figure}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{learning_curves.png}
+  \caption{Learning curves for Task B: shallow tree, tuned deep tree and linear SVM (train vs validation error).}
+  \label{fig:lc}
+\end{figure}
+
+For the SVM (Table~\ref{tab:svm}, Fig.~\ref{fig:svm}), shrinking $\lambda$ grows $\lVert\mathbf{w}\rVert$, narrows the
+margin and reduces the number of support vectors. Validation F1 saturates at $\lambda\le10^{-3}$. Below that,
+30 epochs no longer reach the optimum ($J$ rises again in Table~\ref{tab:svm}) because the
+$1/(\lambda t)$ steps are huge early on. At the chosen $\lambda$ the averaged, last-iterate and constant-rate runs all
+converge to $J\approx0.258$ within 20 epochs. The full-batch run takes only one step per epoch and is still far from the optimum after 50.
+More epochs widen the margin towards its converged value, while F1 barely moves after two epochs. In the 2-D illustration
+(Fig.~\ref{fig:margin}) one can see the margin band and the support vectors directly.
+
+\begin{table}[t]
+  \centering
+  \caption{Linear Pegasos SVM: $\lambda$ sweep (validation).}
+  \label{tab:svm}
+  \footnotesize
+  \setlength{\tabcolsep}{3.5pt}
+  \input{tables/svm_lambda.tex}
+\end{table}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{svm_lambda_sweep.png}\\[2pt]
+  \includegraphics[width=\linewidth]{svm_convergence.png}
+  \caption{SVM: $\lambda$ trades margin width against fit (top). The objective $J$ decreases and
+  converges, compared across schedules and epochs (bottom).}
+  \label{fig:svm}
+\end{figure}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{svm_margin_2d.png}
+  \caption{A margin you can see: our SVM on two standardised features. Solid line: $f=0$; dashed: $f=\pm1$;
+  ringed points: support vectors.}
+  \label{fig:margin}
+\end{figure}
+
+\subsection{Benchmark against scikit-learn}
+Tables~\ref{tab:resA}--\ref{tab:resB} and the combined Table~\ref{tab:all} hold the headline results.
+On Task~A our tree and sklearn's are within one bootstrap std (\OursARmse{} vs \SkARmse{} RMSE on log price),
+and both are far better than predicting the mean (\BaseARmse). In AZN the MAE is about \OursAMae k~AZN.
+On Task~B every model lands in a narrow band: our tree \OursBTreeFone{} vs sklearn \SkBTreeFone; our
+linear SVM \OursSvmFone{} vs SGD \SgdFone{} and SVC \SvcLinFone; our RFF-SVM \OursRffFone{}
+vs RBF-SVC \SvcRbfFone. Our final linear SVM has $\lVert\mathbf{w}\rVert=\SvmNormW$, margin
+$2/\lVert\mathbf{w}\rVert=\SvmMargin$, and \SvmSvFrac\% of the training points are support vectors.
+
+\emph{Structure (Table~\ref{tab:struct}).} With matched hyperparameters the two trees choose the same root
+split (area $\le$ 100.25~m\textsuperscript{2} for A) and share 6--7 of the first 7 splits. They agree on \SameA\% (A) and \SameB\% (B) of test predictions. The
+remaining gaps come from three sources: (a) sklearn stores $X$ as float32, so thresholds are rounded and
+nearly-equal values can merge; (b) ties are broken by a random feature permutation in sklearn and by the lowest
+index in ours; (c) after an early disagreement the subtrees diverge.
+
+\emph{Speed (Fig.~\ref{fig:scaling}).} Our tree is written in Python over NumPy and fits in \OursTreeAFit~s
+vs \SkTreeAFit~s for sklearn's Cython (Task~A), 25--45$\times$ slower across our runs, because every node pays Python overhead
+on top of the sort. Both trees grow slightly faster than linearly in $n$. Wall-clock times on a shared laptop are noisy.
+Our Pegasos fits in \OursSvmFit~s and is linear in $n$. Kernel SVC is already slower on a 10k subsample (\SvcRbfFit~s) and its
+cost grows super-linearly, which is why the RFF route is the practical way to get a kernel at this size.
+
+\begin{table*}[t]
+  \centering
+  \caption{Task A (log price) on the test set. RMSE $\pm$ bootstrap std; *descriptive post-selection fold RMSE mean $\pm$ std, not a leakage-free performance estimate.}
+  \label{tab:resA}
+  \small
+  \input{tables/results_taskA.tex}
+\end{table*}
+
+\begin{table*}[t]
+  \centering
+  \caption{Task B (price tier) on the test set. F1 $\pm$ bootstrap std; *descriptive post-selection fold F1 mean $\pm$ std, not a leakage-free performance estimate.
+  SVC is fit on a stratified 10k subsample of the training split.}
+  \label{tab:resB}
+  \small
+  \input{tables/results_taskB.tex}
+\end{table*}
+
+\begin{table}[t]
+  \centering
+  \caption{All models on both tasks (test set; *descriptive post-selection fold variability on train+val, not a leakage-free performance estimate).}
+  \label{tab:all}
+  \scriptsize
+  \setlength{\tabcolsep}{2pt}
+  \resizebox{\linewidth}{!}{\input{tables/results_all.tex}}
+\end{table}
+
+\begin{table}[t]
+  \centering
+  \caption{Our tree vs sklearn's with matched hyperparameters.}
+  \label{tab:struct}
+  \footnotesize
+  \setlength{\tabcolsep}{3pt}
+  \resizebox{\linewidth}{!}{\input{tables/tree_structure.tex}}
+\end{table}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.85\linewidth]{scaling_fit_time.png}
+  \caption{Fit time vs training size (log--log).}
+  \label{fig:scaling}
+\end{figure}
+
+\subsection{Error analysis}
+\emph{What the models use.} The tree's impurity-decrease importances (Fig.~\ref{fig:imp}) are dominated by
+area (0.59) and location (distance to the centre 0.23, then longitude and latitude), followed by land area
+and category. Our importances and sklearn's are almost identical. The SVM weights tell the same story with
+signs: area, rooms and area per room push towards ``premium'', while distance from the centre and outer settlements
+such as Bin\schwa{} push towards ``standard''.
+
+\emph{Where the models fail.} (i) \emph{Luxury and bargain tails:} the tree shrinks towards the middle. It
+over-predicts the cheapest decile and under-predicts the most expensive one (Fig.~\ref{fig:errreg}, left),
+because a leaf mean cannot extrapolate. The largest AZN errors (Table~\ref{tab:worst}) are 700--1200~m\textsuperscript{2}
+villas listed at 3--5M~AZN, plus one large new-build flat. (ii) \emph{Houses and the districts dominated by them:} the MAE on log price for houses is about 2.6$\times$ that
+for flats (Fig.~\ref{fig:errreg}, right), because land, condition and plot shape vary far more and are only
+partly captured by our features. Per district (12 districts with at least 10 test rows), the test MAE correlates
+strongly with the share of houses ($r=\DistHouseR$) and more weakly with the number of training listings
+($r=\DistSizeR$). The smaller districts are also the suburban, house-heavy ones, so the two effects overlap.
+House share is the better explanation: Khazar, almost entirely villas, is the worst district despite 2.7k
+training listings. With only 12 points this is suggestive, not conclusive. (iii) Flats in the dense
+central districts have the smallest errors (MAE $\approx$0.09--0.12 on log price, i.e.\ roughly 10\%).
+(iv) \emph{Tier errors near the threshold:} \SvmErrNear\% of the SVM's tier errors are listings within about 20\% of
+the \TierThr~AZN threshold (Fig.~\ref{fig:errcls}). Many of these are irreducible, because asking prices of near-identical
+flats differ by more than that. Near the threshold the deep tree errs less than both SVMs, since it can carve
+out local neighbourhoods. Far from the threshold the smoother SVMs make fewer mistakes than the tree, whose leaves sometimes
+hold a few mislabelled outliers. This is consistent with the SVMs' higher ROC-AUC despite a lower F1.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{importance_and_weights.png}
+  \caption{Left: impurity-decrease importances (Task A), ours vs sklearn. Right: largest linear-SVM
+  weights (Task B; positive pushes towards premium).}
+  \label{fig:imp}
+\end{figure}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{errors_regression.png}
+  \caption{Task A test errors of our tree: mean residual by true-price decile (left), district MAE vs the
+  share of houses in the district (middle), and MAE by category (right).}
+  \label{fig:errreg}
+\end{figure}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{roc_confusion.png}\\[2pt]
+  \includegraphics[width=0.8\linewidth]{errors_classification_threshold.png}
+  \caption{Task B: ROC curves and confusion matrices (test). Error rate vs distance of the true
+  price from the tier threshold.}
+  \label{fig:errcls}
+\end{figure}
+
+\begin{table}[t]
+  \centering
+  \caption{Largest absolute AZN errors of our Task A tree (test).}
+  \label{tab:worst}
+  \footnotesize
+  \input{tables/worst_errors.tex}
+\end{table}
+
 \section{Discussion and Limitations}
-Where and why each model fails (luxury outliers, sparse districts,
-scaling effects), the bias--variance story, and honest limitations.
+\begin{itemize}\setlength\itemsep{0pt}
+\item \emph{Asking, not transaction, prices.} The target is the listed price. Agents' over-pricing and stale
+  listings add noise that no feature can explain.
+\item \emph{One snapshot.} The data covers five weeks in autumn 2024. A random split mixes the same buildings
+  into train and test, and a time- or building-grouped split would be harder. We did not model time.
+\item \emph{Unused text.} \texttt{description} probably holds strong signal (renovation quality, view), but it
+  sometimes restates the price, so we excluded it rather than risk leakage.
+\item \emph{Speed.} Our tree is 25--45$\times$ slower than sklearn's Cython. This is acceptable here, but a
+  histogram-based split search would be needed for much larger data.
+\item \emph{SVC on a subsample.} The kernel-SVC baseline sees 10k rows, not 40k. That favours our models slightly,
+  and we state it in every table.
+\item \emph{Residual duplicates.} Three identical rows in Table~\ref{tab:worst} (same district, area and price)
+  suggest that re-posts with slightly different coordinates survive our exact-match de-duplication. A fuzzy
+  match (e.g.\ same price and area within 200~m) would be stricter.
+\item \emph{Selection rule.} Choosing the most regularised SVM within 0.002 F1 is a judgement call. The
+  validation-best $\lambda=10^{-6}$ would give the same F1 within noise, but with an unconverged objective.
+\end{itemize}
 
 \section{Conclusion}
-One short paragraph: what you found and what you would do next.
+From-scratch implementations of CART and Pegasos, checked against sklearn on toy and real data, reach the
+same accuracy as the library versions on a real, messy dataset once leakage and duplicates are handled. Location
+and area explain most of the price. The remaining error sits in the tails and close to the tier threshold.
+Next steps are a grouped/temporal split, text features from descriptions with price mentions masked,
+and ensembles of our own trees.
 
 \section*{Tools and Acknowledgements}
-Disclose any AI-assistant use and what it was used for, plus data/code
-you built on. (Required.)
+\emph{AI assistance:} an AI coding assistant (Claude, Anthropic) was used to draft the code, tests,
+this report and the slides. All results were produced by running the code in the repository, and the team
+reviewed and can explain every component (see \texttt{contribution\_report.md}).
+\emph{Data:} bina.az listings via Kaggle (\texttt{sehriyarmemmedli/binaaz-sale-project}). Personal fields were
+dropped and are not redistributed. \emph{Libraries:} NumPy, pandas and Matplotlib, with scikit-learn used for baselines and tests only.
 
-% =====================================================================
 \begin{thebibliography}{9}
 \bibitem{pegasos}
 S.~Shalev-Shwartz, Y.~Singer, N.~Srebro, and A.~Cotter,
 ``Pegasos: primal estimated sub-gradient solver for SVM,''
 \emph{Mathematical Programming}, vol.~127, no.~1, pp.~3--30, 2011.
+\bibitem{rff}
+A.~Rahimi and B.~Recht, ``Random features for large-scale kernel machines,''
+in \emph{Proc. NeurIPS}, 2007, pp.~1177--1184.
+\bibitem{cart}
+L.~Breiman, J.~Friedman, R.~Olshen, and C.~Stone, \emph{Classification and Regression Trees}.
+Wadsworth, 1984.
+\bibitem{sklearn}
+F.~Pedregosa \emph{et al.}, ``Scikit-learn: machine learning in Python,''
+\emph{JMLR}, vol.~12, pp.~2825--2830, 2011.
 \end{thebibliography}
 
 \end{document}

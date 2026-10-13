@@ -1,0 +1,13 @@
+\begin{tabular}{@{}lrrrrrrrr@{}}
+\toprule
+Model & Prec. & Rec. & F1 (test) & ROC-AUC & PR-AUC & Fold F1* & fit s & pred. s \\
+\midrule
+Ours: DecisionTree (entropy) & 0.922 & 0.924 & 0.923 $\pm$ 0.003 & 0.926 & 0.894 & 0.923 $\pm$ 0.003 & 9.83 & 0.031 \\
+sklearn DecisionTreeClassifier & 0.927 & 0.927 & 0.927 $\pm$ 0.003 & 0.930 & 0.900 & 0.923 $\pm$ 0.003 & 1.31 & 0.006 \\
+Ours: Pegasos linear SVM & 0.910 & 0.908 & 0.909 $\pm$ 0.003 & 0.968 & 0.965 & 0.906 $\pm$ 0.003 & 4.98 & 0.201 \\
+Ours: RFF-Pegasos SVM & 0.912 & 0.913 & 0.913 $\pm$ 0.003 & 0.974 & 0.973 & 0.909 $\pm$ 0.002 & 9.10 & 0.316 \\
+sklearn SGDClassifier (hinge) & 0.906 & 0.909 & 0.907 $\pm$ 0.003 & 0.967 & 0.964 & 0.905 $\pm$ 0.003 & 1.83 & 0.010 \\
+sklearn SVC linear (10k subsample) & 0.906 & 0.903 & 0.904 $\pm$ 0.003 & 0.966 & 0.963 & 0.905 $\pm$ 0.003 & 6.29 & 2.994 \\
+sklearn SVC RBF (10k subsample) & 0.911 & 0.908 & 0.910 $\pm$ 0.003 & 0.973 & 0.973 & 0.908 $\pm$ 0.003 & 7.01 & 4.800 \\
+\bottomrule
+\end{tabular}

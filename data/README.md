@@ -1,26 +1,33 @@
 # Data
 
 The **bina.az sale** dataset is **not committed** to the repo (see `.gitignore`).
-Each team member downloads it locally.
 
 ## Where to get it
-Kaggle: **"binaaz-sale-project"** by `sehriyarmemmedli`
+Kaggle: **"binaaz-sale-project"** by `sehriyarmemmedli`, **version 1**
 <https://www.kaggle.com/datasets/sehriyarmemmedli/binaaz-sale-project>
 
-## How to place it
-1. Download the dataset archive from Kaggle.
-2. Extract it so the CSV lives **directly in this folder**, e.g.:
-   ```
-   data/bina_az_sale.csv
-   ```
-3. If your filename differs, set the path once at the top of
-   `src/data_prep.py` (the `DATA_PATH` constant) — do not scatter paths
-   across the codebase.
+Archive downloaded on 2026-10-11; it contains one file, `house_sale.csv`
+(141.9 MB, 100,775 rows × 51 columns, listings scraped 2024-10-05 … 2024-11-06).
 
-## Notes / gotchas
-- Column names are in **Azerbaijani** (e.g. `Sahə`, `Otaq sayı`, `Mərtəbə`,
-  `Təmir`, `Kateqoriya`, …). Keep the UTF-8 encoding when you read the file.
-- **Leakage warning:** any column derived from the target `price`
-  (e.g. a per-m² unit price, or a precomputed total) must be **dropped**
-  before training. Name the columns you removed in your report.
-- Record the dataset version/date you downloaded, for reproducibility.
+## How to place it
+Either run (from the repo root)
+
+```bash
+python -m src.get_data      # kagglehub download -> data/house_sale.csv
+```
+
+or download the archive by hand and extract it so the CSV is at
+
+```
+data/house_sale.csv
+```
+
+If your filename differs, change `DATA_PATH` at the top of `src/data_prep.py`.
+
+## Notes
+- Column names are Azerbaijani (`Sahə`, `Otaq sayı`, `Mərtəbə`, `Təmir`, …);
+  read with UTF-8. They are translated in `data_prep.RENAME`.
+- **Leakage:** `unit_price` (AZN per m²) and `total_price` (= `price`) are
+  arithmetic functions of the target and are dropped (`data_prep.LEAKAGE_COLUMNS`).
+- Identifiers and personal fields (`owner_name`, `shop_name`, `address`,
+  ids, URLs) are dropped and never written to any output.
